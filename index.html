@@ -55,17 +55,15 @@
       const { useState, useEffect, useRef } = React;
 
       // CONFIGURACIÓN IMPORTANTE
-      // Este nombre agrupa tus contadores. 
       const COUNTER_NAMESPACE = "experiencias-accesibilidad-repo-v1"; 
       
       // ======================================================================
-      // 👇👇👇 AQUÍ ES DONDE TIENES QUE PEGAR TU NOMBRE DE DISQUS 👇👇👇
-      // Borra lo que está entre comillas y pon el tuyo.
-      // Ejemplo: const DISQUS_SHORTNAME = "experiencias-ivette";
+      // CONFIGURACIÓN DE DISQUS
+      // ======================================================================
       
       const DISQUS_SHORTNAME = "experiencias-accesibilidad"; 
       
-      // 👆👆👆 ===============================================================
+      // ======================================================================
 
 
       const INITIAL_EXPERIENCES = [
@@ -113,16 +111,13 @@
 
       // --- COMPONENTES DE TERCEROS ---
       
-      // 1. Disqus Embed (Comentarios Globales)
       const DisqusComments = () => {
         useEffect(() => {
-          if (DISQUS_SHORTNAME === "experiencias-accesibilidad") return;
+          if (DISQUS_SHORTNAME === "AQUI_TU_NOMBRE_CORTO") return;
 
-          // Limpiar scripts anteriores si existen
           const existingScript = document.getElementById('disqus_script');
           if (existingScript) existingScript.remove();
 
-          // Variable global requerida por Disqus
           window.disqus_config = function () {
             this.page.url = window.location.href;
             this.page.identifier = "experiencias-home"; 
@@ -135,11 +130,10 @@
           (d.head || d.body).appendChild(s);
         }, []);
 
-        if (DISQUS_SHORTNAME === "experiencias-accesibilidad") {
+        if (DISQUS_SHORTNAME === "AQUI_TU_NOMBRE_CORTO") {
           return (
              <div className="bg-yellow-50 text-yellow-800 p-4 rounded border border-yellow-200">
                ⚠️ <strong>Falta configurar:</strong> Aún no has puesto tu Shortname de Disqus en el código.
-               <br/>Busca la línea que dice <code>const DISQUS_SHORTNAME = "AQUI_TU_NOMBRE_CORTO";</code> y reemplázalo por el nombre que creaste en Disqus.
              </div>
           );
         }
@@ -158,7 +152,6 @@
         const [aiAnalysis, setAiAnalysis] = useState(null);
         const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-        // Cargar conteos globales al iniciar
         useEffect(() => {
           INITIAL_EXPERIENCES.forEach(exp => {
             exp.files.forEach(file => {
@@ -172,16 +165,11 @@
           });
         }, []);
 
-        // Manejador de descarga global
         const handleDownload = (fileId) => {
-          // 1. Actualizar visualmente de inmediato (optimista)
           setDownloadCounts(prev => ({ ...prev, [fileId]: (prev[fileId] || 0) + 1 }));
-          
-          // 2. Mandar señal a la nube (CounterAPI)
           fetch(`https://api.counterapi.dev/v1/${COUNTER_NAMESPACE}/${fileId}/up`)
             .then(res => res.json())
             .then(data => {
-              // Confirmar dato real del servidor
               setDownloadCounts(prev => ({ ...prev, [fileId]: data.count }));
             })
             .catch(e => console.error("Error contando descarga", e));
@@ -197,8 +185,6 @@
             const genAI = new GoogleGenerativeAI(apiKey);
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             
-            // Nota: Gemini no puede leer los comentarios de Disqus directamente por seguridad,
-            // así que analizaremos solo las estadísticas de descarga disponibles.
             const statsText = JSON.stringify(downloadCounts);
             const prompt = `Actúa como analista educativo. Tengo estos conteos de descargas de recursos educativos accesibles (ID archivo: cantidad): ${statsText}. 
             Los archivos terminados en 'guia' son teóricos, 'obs' son para docentes y 'ref' para estudiantes. 
@@ -243,7 +229,7 @@
                   </h2>
 
                   <div className="bg-blue-900/50 p-3 rounded mb-4 text-sm text-blue-100">
-                    ✅ <strong>Conectado a la nube:</strong> Los contadores de descarga que ves aquí son reales y globales (se actualizan para todos los usuarios).
+                    ✅ <strong>Conectado a la nube:</strong> Los contadores de descarga que ves aquí son reales y globales.
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 mb-6">
@@ -251,11 +237,10 @@
                       <div className="text-3xl font-bold text-green-400">
                         {Object.values(downloadCounts).reduce((a, b) => a + b, 0)}
                       </div>
-                      <div className="text-xs text-slate-300 uppercase">Descargas Totales Globales</div>
+                      <div className="text-xs text-slate-300 uppercase">Descargas Totales</div>
                     </div>
                   </div>
 
-                  {/* SECCION IA */}
                   <div className="border-t border-slate-700 pt-4">
                     <label className="block text-xs text-gray-400 mb-2">Consulta a Gemini sobre tus estadísticas:</label>
                     <div className="flex gap-2 mb-3">
@@ -274,7 +259,6 @@
                         <Icons.Sparkles /> {isAnalyzing ? "..." : "Analizar"}
                       </button>
                     </div>
-                    
                     {aiAnalysis && (
                       <div className="bg-slate-700 p-4 rounded text-sm text-gray-200 italic border-l-4 border-blue-500 whitespace-pre-wrap">
                           {aiAnalysis}
@@ -293,10 +277,22 @@
                     <h3 className="text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2">
                       <Icons.Headphones /> Audio de la experiencia
                     </h3>
-                    <audio controls className="w-full mt-2 bg-gray-100 rounded">
-                      <source src={exp.audioSrc} type="audio/mpeg" />
-                      Tu navegador no soporta audio.
-                    </audio>
+                    <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                      <audio controls className="w-full">
+                        <source src={exp.audioSrc} type="audio/mpeg" />
+                        Tu navegador no soporta audio.
+                      </audio>
+                      {/* Botón de descarga explícito para asegurar que se pueda descargar */}
+                      <div className="mt-2 flex justify-end">
+                        <a 
+                          href={exp.audioSrc} 
+                          download 
+                          className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium"
+                        >
+                          <Icons.Download size={16} /> Descargar Audio MP3
+                        </a>
+                      </div>
+                    </div>
                   </div>
 
                   <div>
@@ -306,17 +302,18 @@
                     
                     <div className="space-y-3">
                       {exp.files.map((file) => (
-                        <div key={file.id} className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-gray-100 last:border-0">
+                        <div key={file.id} className="flex flex-col md:flex-row md:items-center justify-between gap-3 py-3 border-b border-gray-100 last:border-0">
+                          {/* Botón ajustado: ya no es flex-1, tiene ancho auto en desktop y full en movil */}
                           <a 
                             href={file.filename}
                             download
                             onClick={() => handleDownload(file.id)}
-                            className="btn-primary px-4 py-2.5 rounded-md text-sm md:text-base no-underline flex-1 text-center md:text-left hover:shadow-md transition-all cursor-pointer"
+                            className="btn-primary px-4 py-2 rounded-md text-sm font-medium no-underline w-full md:w-auto text-center hover:shadow-md transition-all cursor-pointer"
                           >
                             {file.label}
                           </a>
-                          <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1 rounded-full text-sm font-medium min-w-[80px] justify-center" title="Descargas globales">
-                            <Icons.Download />
+                          <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1 rounded-full text-sm font-medium md:min-w-[80px] justify-center self-end md:self-auto" title="Descargas globales">
+                            <Icons.Download size={16} />
                             <span>{downloadCounts[file.id] || 0}</span>
                           </div>
                         </div>
