@@ -4,30 +4,429 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Experiencias de Aprendizaje Accesibles</title>
+    
+    <!-- Estilos Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fuentes -->
     <link href="https://fonts.googleapis.com/css2?family=Arial:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Librerías de React y Babel para que funcione sin configurar nada -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Iconos Lucide (Versión ligera para navegador) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- SDK de Gemini (Versión Web Antigua compatible con navegador directo) -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+
     <style>
-      /* Tus estilos originales adaptados */
       body { font-family: Arial, Helvetica, sans-serif; background-color: #f5f5f5; color: #333; margin: 0; }
       .header-bg { background: #1a73e8; color: #fff; }
       .btn-primary { background: #1a73e8; color: #fff; transition: background 0.3s; }
       .btn-primary:hover { background: #0b57d0; }
+      
+      /* Animaciones suaves */
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+      
+      /* Custom Scrollbar */
+      .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #aaa; }
     </style>
-    <script type="importmap">
-{
-  "imports": {
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
-    "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.0/client",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/"
-  }
-}
-</script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+
+    <!-- LÓGICA DE LA APLICACIÓN -->
+    <script type="text/babel" data-type="module">
+      import { GoogleGenerativeAI } from "@google/generative-ai";
+
+      const { useState, useEffect } = React;
+
+      // --- DATOS INICIALES ---
+      const INITIAL_EXPERIENCES = [
+        {
+          id: 1,
+          title: "1. Escribe con tu voz: experimenta la accesibilidad con TalkBack",
+          audioSrc: "exp1-audio.mp3", 
+          files: [
+            { id: "e1-f1", label: "Descargar Guía Escrita", filename: "exp1-guia.pdf", count: 0 },
+            { id: "e1-f2", label: "Descargar Plantilla de Observación Docente", filename: "exp1-observacion-docente.pdf", count: 0 },
+            { id: "e1-f3", label: "Descargar Plantilla de Reflexión Estudiantil", filename: "exp1-reflexion-estudiante.pdf", count: 0 },
+          ]
+        },
+        {
+          id: 2,
+          title: "2. Descubre con tus oídos: explorando el mundo con Google Lens",
+          audioSrc: "exp2-audio.mp3",
+          files: [
+            { id: "e2-f1", label: "Descargar Guía Escrita", filename: "exp2-guia.pdf", count: 0 },
+            { id: "e2-f2", label: "Plantilla de Observación Docente", filename: "exp2-observacion-docente.pdf", count: 0 },
+            { id: "e2-f3", label: "Plantilla de Reflexión Estudiantil", filename: "exp2-reflexion-estudiante.pdf", count: 0 },
+          ]
+        },
+        {
+          id: 3,
+          title: "3. Escucha para aprender: acceso a la información escrita con Lookout",
+          audioSrc: "exp3-audio.mp3",
+          files: [
+            { id: "e3-f1", label: "Descargar Guía Escrita", filename: "exp3-guia.pdf", count: 0 },
+            { id: "e3-f2", label: "Plantilla de Observación Docente", filename: "exp3-observacion-docente.pdf", count: 0 },
+            { id: "e3-f3", label: "Plantilla de Reflexión Estudiantil", filename: "exp3-reflexion-estudiante.pdf", count: 0 },
+          ]
+        }
+      ];
+
+      // --- COMPONENTES ---
+
+      // Iconos SVG simples para evitar dependencias complejas
+      const Icons = {
+        Download: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>,
+        Message: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+        Headphones: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>,
+        FileText: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>,
+        Settings: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
+        Save: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+        Sparkles: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>,
+        User: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      };
+
+      const App = () => {
+        // --- ESTADOS ---
+        const [experiences, setExperiences] = useState(() => {
+          const saved = localStorage.getItem("exp_data_v1");
+          return saved ? JSON.parse(saved) : INITIAL_EXPERIENCES;
+        });
+
+        const [comments, setComments] = useState(() => {
+          const saved = localStorage.getItem("exp_comments_v1");
+          return saved ? JSON.parse(saved) : [];
+        });
+
+        const [showAdmin, setShowAdmin] = useState(false);
+        const [apiKey, setApiKey] = useState(""); // API Key manual por seguridad
+        const [aiAnalysis, setAiAnalysis] = useState(null);
+        const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+        // --- PERSISTENCIA (LOCALSTORAGE) ---
+        useEffect(() => {
+          localStorage.setItem("exp_data_v1", JSON.stringify(experiences));
+        }, [experiences]);
+
+        useEffect(() => {
+          localStorage.setItem("exp_comments_v1", JSON.stringify(comments));
+        }, [comments]);
+
+        // --- MANEJADORES ---
+        const handleDownload = (expId, fileId) => {
+          setExperiences(prev => prev.map(exp => {
+            if (exp.id !== expId) return exp;
+            return {
+              ...exp,
+              files: exp.files.map(f => f.id === fileId ? { ...f, count: f.count + 1 } : f)
+            };
+          }));
+        };
+
+        const handleAddComment = (name, email, text) => {
+          const newComment = {
+            id: Date.now().toString(),
+            author: name,
+            email,
+            text,
+            date: new Date().toLocaleString()
+          };
+          setComments([newComment, ...comments]);
+        };
+
+        // --- FUNCIONES ADMIN ---
+        const exportData = () => {
+          let csvContent = "data:text/csv;charset=utf-8,";
+          // Descargas
+          csvContent += "--- REPORTE DE DESCARGAS ---\n";
+          csvContent += "Experiencia,Archivo,Descargas\n";
+          experiences.forEach(exp => {
+            exp.files.forEach(f => {
+              csvContent += `"${exp.title}","${f.filename}",${f.count}\n`;
+            });
+          });
+          // Comentarios
+          csvContent += "\n--- REPORTE DE COMENTARIOS ---\n";
+          csvContent += "Fecha,Autor,Email,Comentario\n";
+          comments.forEach(c => {
+            csvContent += `"${c.date}","${c.author}","${c.email || ''}","${c.text.replace(/"/g, '""')}"\n`;
+          });
+
+          const encodedUri = encodeURI(csvContent);
+          const link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", "reporte_accesibilidad.csv");
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        };
+
+        const analyzeWithGemini = async () => {
+          if (!apiKey) {
+            alert("Por favor, ingresa una API Key válida de Google Gemini primero.");
+            return;
+          }
+          setIsAnalyzing(true);
+          setAiAnalysis(null);
+          try {
+            // Inicializar la IA con la clave proporcionada por el usuario
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+            const summary = {
+              total_downloads: experiences.reduce((acc, exp) => acc + exp.files.reduce((a, f) => a + f.count, 0), 0),
+              total_comments: comments.length,
+              top_files: experiences.flatMap(e => e.files).sort((a,b) => b.count - a.count).slice(0, 3).map(f => `${f.filename} (${f.count})`),
+              latest_comments: comments.slice(0, 5).map(c => c.text)
+            };
+
+            const prompt = `Actúa como un analista educativo. Analiza estos datos de uso de un repositorio web: ${JSON.stringify(summary)}. Dame un breve reporte (máximo 100 palabras) sobre qué temas interesan más y el sentimiento general de los comentarios.`;
+
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            setAiAnalysis(response.text());
+          } catch (error) {
+            console.error(error);
+            setAiAnalysis("Error al conectar con la IA. Verifica tu API Key.");
+          } finally {
+            setIsAnalyzing(false);
+          }
+        };
+
+        return (
+          <div className="min-h-screen pb-10">
+            {/* HEADER */}
+            <header className="header-bg py-8 px-4 text-center shadow-md relative">
+              <div className="max-w-4xl mx-auto">
+                <h1 className="text-3xl font-bold mb-2">Experiencias de Aprendizaje Accesibles</h1>
+                <p className="text-lg opacity-90">Estrategias para apoyar a estudiantes ciegos en el acceso a la información</p>
+                
+                <button 
+                  onClick={() => setShowAdmin(!showAdmin)}
+                  className="absolute top-4 right-4 text-white/50 hover:text-white p-2 transition-colors"
+                  title="Panel de Administración"
+                >
+                  <Icons.Settings />
+                </button>
+              </div>
+            </header>
+
+            <div className="max-w-[900px] mx-auto px-5 py-6">
+              
+              {/* PANEL ADMIN */}
+              {showAdmin && (
+                <div className="bg-slate-800 text-white rounded-lg p-6 mb-8 shadow-xl animate-fade-in">
+                  <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                      <Icons.Settings /> Panel Docente
+                    </h2>
+                    <button onClick={exportData} className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded flex items-center gap-2 font-bold text-sm transition-colors">
+                      <Icons.Save /> Descargar Excel/CSV
+                    </button>
+                  </div>
+
+                  <div className="bg-yellow-600/20 border border-yellow-600/50 p-3 rounded mb-4 text-sm text-yellow-100">
+                    ⚠️ <strong>Importante:</strong> Al no usar base de datos central, estos números son <strong>locales</strong> de este navegador. Para ver los datos de tus alumnos, pídeles que descarguen su propio reporte y te lo envíen.
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-slate-700 p-3 rounded text-center">
+                      <div className="text-2xl font-bold text-blue-400">
+                        {experiences.reduce((acc, e) => acc + e.files.reduce((a, f) => a + f.count, 0), 0)}
+                      </div>
+                      <div className="text-xs text-slate-300 uppercase">Mis Descargas</div>
+                    </div>
+                    <div className="bg-slate-700 p-3 rounded text-center">
+                      <div className="text-2xl font-bold text-blue-400">{comments.length}</div>
+                      <div className="text-xs text-slate-300 uppercase">Mis Comentarios</div>
+                    </div>
+                  </div>
+
+                  {/* SECCION IA */}
+                  <div className="border-t border-slate-700 pt-4">
+                    <label className="block text-xs text-gray-400 mb-2">Ingresa tu API Key de Google Gemini para analizar:</label>
+                    <div className="flex gap-2 mb-3">
+                      <input 
+                        type="password" 
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder="Pegar API Key aquí..."
+                        className="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-sm"
+                      />
+                      <button 
+                        onClick={analyzeWithGemini} 
+                        disabled={isAnalyzing}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-4 rounded font-bold flex items-center gap-2 text-sm transition-colors"
+                      >
+                        <Icons.Sparkles /> {isAnalyzing ? "..." : "Analizar"}
+                      </button>
+                    </div>
+                    
+                    {aiAnalysis && (
+                      <div className="bg-slate-700 p-4 rounded text-sm text-gray-200 italic border-l-4 border-blue-500">
+                          {aiAnalysis}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* LISTA DE EXPERIENCIAS */}
+              {experiences.map((exp) => (
+                <div key={exp.id} className="bg-white p-6 mb-6 rounded-[10px] shadow-[0_4px_10px_rgba(0,0,0,0.1)]">
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">{exp.title}</h2>
+
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <Icons.Headphones /> Audio de la experiencia
+                    </h3>
+                    <audio controls className="w-full mt-2 bg-gray-100 rounded">
+                      <source src={exp.audioSrc} type="audio/mpeg" />
+                      Tu navegador no soporta audio.
+                    </audio>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <Icons.FileText /> Recursos Descargables
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      {exp.files.map((file) => (
+                        <div key={file.id} className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-gray-100 last:border-0">
+                          <a 
+                            href={file.filename}
+                            download
+                            onClick={() => handleDownload(exp.id, file.id)}
+                            className="btn-primary px-4 py-2.5 rounded-md text-sm md:text-base no-underline flex-1 text-center md:text-left hover:shadow-md transition-all"
+                          >
+                            {file.label}
+                          </a>
+                          <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1 rounded-full text-sm font-medium min-w-[80px] justify-center" title="Número de veces descargado">
+                            <Icons.Download />
+                            <span>{file.count}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* COMENTARIOS */}
+              <div className="bg-white p-6 mb-6 rounded-[10px] shadow-[0_4px_10px_rgba(0,0,0,0.1)]">
+                <h2 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-2">
+                  <Icons.Message /> Foro de Comentarios
+                </h2>
+                <p className="text-gray-600 mb-6 text-sm">Comparte tus reflexiones sobre las actividades.</p>
+
+                <CommentForm onSubmit={handleAddComment} />
+
+                <div className="mt-8 pt-4 border-t border-gray-100">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">Comentarios recientes</h3>
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {comments.length === 0 ? (
+                      <p className="text-gray-400 italic text-center py-4 bg-gray-50 rounded">Aún no hay comentarios. ¡Sé el primero!</p>
+                    ) : (
+                      comments.map((c) => (
+                        <div key={c.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm animate-fade-in">
+                          <div className="flex items-center gap-3 mb-2">
+                             <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                               <Icons.User />
+                             </div>
+                             <div>
+                               <strong className="text-[#1a73e8] block leading-tight text-sm">{c.author}</strong>
+                               <span className="text-xs text-gray-400">{c.date}</span>
+                             </div>
+                          </div>
+                          <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap pl-11">{c.text}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        );
+      };
+
+      // FORMULARIO COMPONENTE
+      const CommentForm = ({ onSubmit }) => {
+        const [name, setName] = useState("");
+        const [email, setEmail] = useState("");
+        const [text, setText] = useState("");
+
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          if (!name.trim() || !text.trim()) return;
+          onSubmit(name, email, text);
+          setName("");
+          setEmail("");
+          setText("");
+        };
+
+        return (
+          <form onSubmit={handleSubmit} className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre</label>
+                <input 
+                  type="text" required value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 outline-none text-sm"
+                  placeholder="Tu nombre"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Correo (Opcional)</label>
+                <input 
+                  type="email" value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 outline-none text-sm"
+                  placeholder="ejemplo@correo.com"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tu comentario</label>
+              <textarea 
+                rows="3" required value={text}
+                onChange={e => setText(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 outline-none text-sm resize-none"
+                placeholder="Escribe aquí qué te pareció la experiencia..."
+              ></textarea>
+            </div>
+            <div className="flex justify-between items-center pt-2">
+              <span className="text-xs text-gray-400 hidden md:inline">Los datos se guardan localmente.</span>
+              <button type="submit" className="btn-primary px-6 py-2 rounded font-bold text-sm shadow-sm w-full md:w-auto">
+                Publicar Comentario
+              </button>
+            </div>
+          </form>
+        );
+      };
+
+      // Renderizado
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
   </body>
 </html>
