@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@google/generative-ai": "latest"
+
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
