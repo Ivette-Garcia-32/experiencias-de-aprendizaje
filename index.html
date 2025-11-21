@@ -116,7 +116,7 @@
       // 1. Disqus Embed (Comentarios Globales)
       const DisqusComments = () => {
         useEffect(() => {
-          if (DISQUS_SHORTNAME === "AQUI_TU_NOMBRE_CORTO") return;
+          if (DISQUS_SHORTNAME === "experiencias-accesibilidad") return;
 
           // Limpiar scripts anteriores si existen
           const existingScript = document.getElementById('disqus_script');
@@ -135,7 +135,7 @@
           (d.head || d.body).appendChild(s);
         }, []);
 
-        if (DISQUS_SHORTNAME === "AQUI_TU_NOMBRE_CORTO") {
+        if (DISQUS_SHORTNAME === "experiencias-accesibilidad") {
           return (
              <div className="bg-yellow-50 text-yellow-800 p-4 rounded border border-yellow-200">
                ⚠️ <strong>Falta configurar:</strong> Aún no has puesto tu Shortname de Disqus en el código.
